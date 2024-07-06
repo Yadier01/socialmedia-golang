@@ -17,9 +17,11 @@ type Server struct {
 	Config     util.Config
 }
 
+
 func NewServer(config util.Config, store db.Store) *Server {
 	jwt, err := token.NewJWTMaker(config.TokenSymmetricKey)
-	if err != nil {
+
+	    if err != nil {
 		log.Fatal(err)
 	}
 	server := &Server{

@@ -29,7 +29,7 @@ func (p *Payload) Valid() error {
 	return nil
 }
 
-func NewPayload(userID int64, duration time.Duration) (*Payload, error) {
+func NewPayload(userID int64) (*Payload, error) {
 	tokenID, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
@@ -38,7 +38,7 @@ func NewPayload(userID int64, duration time.Duration) (*Payload, error) {
 		ID:     tokenID,
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(duration)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 100)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

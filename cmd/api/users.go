@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -81,7 +80,7 @@ func (server *Server) AddUser(c *gin.Context) {
 		return
 	}
 
-	jwt, err := server.TokenMaker.CreateToken(usr.ID, time.Hour*24*100)
+	jwt, err := server.TokenMaker.CreateToken(usr.ID)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -106,7 +105,7 @@ func (server *Server) UserLogIn(c *gin.Context) {
 		return
 	}
 
-	jwt, err := server.TokenMaker.CreateToken(usr.ID, time.Hour*24*100)
+	jwt, err := server.TokenMaker.CreateToken(usr.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		fmt.Print(err)
