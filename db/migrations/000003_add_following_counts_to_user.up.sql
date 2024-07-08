@@ -1,2 +1,0 @@
-ALTER TABLE users ADD COLUMN follower_count INT DEFAULT 0;
-ALTER TABLE users ADD COLUMN following_count INT DEFAULT 0;

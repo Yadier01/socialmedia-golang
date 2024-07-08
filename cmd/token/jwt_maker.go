@@ -1,8 +1,8 @@
 package token
 
 import (
-	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -31,25 +31,27 @@ func (maker *JWTMaker) CreateToken(userID int64) (string, error) {
 }
 
 func (maker *JWTMaker) VerifyToken(tokenString string) (*Payload, error) {
-	// Parse the token with our custom claims while providing a validation key
-	token, err := jwt.ParseWithClaims(tokenString, &Payload{}, func(token *jwt.Token) (interface{}, error) {
-		// Check that the signing method (algorithm) is HMAC
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, ErrInvalidToken
-		}
-		return []byte(maker.secretKey), nil
-	})
+	token, err := jwt.ParseWithClaims(
+		tokenString,
+		&Payload{},
+		func(token *jwt.Token) (interface{}, error) {
+			_, ok := token.Method.(*jwt.SigningMethodHMAC)
+			if !ok {
+				return nil, ErrInvalidToken
+			}
+			return []byte(maker.secretKey), nil
+		},
+	)
 
 	if err != nil {
-		if errors.Is(err, jwt.ErrTokenExpired) {
+		// Check for specific errors using string comparisons
+		if strings.Contains(err.Error(), "token is expired") {
 			return nil, ErrExpiredToken
 		}
 		return nil, ErrInvalidToken
 	}
 
-	// Type assert the token's claims to our Payload struct
 	payload, ok := token.Claims.(*Payload)
-	// Check if the type assertion is successful and if the token is valid
 	if !ok || !token.Valid {
 		return nil, ErrInvalidToken
 	}

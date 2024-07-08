@@ -17,11 +17,10 @@ type Server struct {
 	Config     util.Config
 }
 
-
 func NewServer(config util.Config, store db.Store) *Server {
 	jwt, err := token.NewJWTMaker(config.TokenSymmetricKey)
 
-	    if err != nil {
+	if err != nil {
 		log.Fatal(err)
 	}
 	server := &Server{
@@ -39,15 +38,17 @@ func (server *Server) setupRouter() {
 	r.POST("/login", server.UserLogIn)
 	r.GET("/:id", server.GetUserById)
 	r.GET("/", server.GetUsers)
-	r.POST("/", server.AddUser)
+	r.POST("/", server.CreateUser)
 	authRoutes := r.Group("/").Use(authMiddleware(server.TokenMaker))
 
 	r.GET("/post/:id", server.GetPostById)
-	r.GET("/post/", server.GetPosts)
+	// r.GET("/post/", server.GetPosts)
 	authRoutes.POST("/post/", server.CreatePost)
 	authRoutes.POST("/follow/", server.FollowUser)
+	authRoutes.DELETE("/user/", server.DeleteUser)
 	server.router = r
 }
+
 func (server *Server) Start() error {
 	return server.router.Run()
 }

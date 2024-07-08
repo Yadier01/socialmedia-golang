@@ -1,2 +1,11 @@
-ALTER TABLE posts DROP CONSTRAINT posts_user_id_fkey;
+DROP TABLE IF EXISTS likes;
+
+DROP TABLE IF EXISTS comments;
+
+DROP TABLE IF EXISTS posts;
+
+DROP TABLE IF EXISTS followers;
+
+DROP TABLE IF EXISTS profiles;
+
 DROP TABLE IF EXISTS users;

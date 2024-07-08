@@ -14,7 +14,7 @@ INSERT INTO followers(
     follower_id, following_id
 ) VALUES (
     $1, $2
-) RETURNING id, follower_id, following_id
+) RETURNING id, follower_id, following_id, created_at
 `
 
 type FollowUserParams struct {
@@ -25,6 +25,26 @@ type FollowUserParams struct {
 func (q *Queries) FollowUser(ctx context.Context, arg FollowUserParams) (Follower, error) {
 	row := q.db.QueryRowContext(ctx, followUser, arg.FollowerID, arg.FollowingID)
 	var i Follower
-	err := row.Scan(&i.ID, &i.FollowerID, &i.FollowingID)
+	err := row.Scan(
+		&i.ID,
+		&i.FollowerID,
+		&i.FollowingID,
+		&i.CreatedAt,
+	)
 	return i, err
+}
+
+const unFollowUser = `-- name: UnFollowUser :exec
+DELETE FROM followers
+WHERE follower_id = $1 AND following_id = $2
+`
+
+type UnFollowUserParams struct {
+	FollowerID  int64 `json:"follower_id"`
+	FollowingID int64 `json:"following_id"`
+}
+
+func (q *Queries) UnFollowUser(ctx context.Context, arg UnFollowUserParams) error {
+	_, err := q.db.ExecContext(ctx, unFollowUser, arg.FollowerID, arg.FollowingID)
+	return err
 }

@@ -9,6 +9,7 @@ import (
 type Store interface {
 	Querier
 	Follow(ctx context.Context, args FollowTxParams) error
+	UnFollow(ctx context.Context, args UnFollowTxParams) error
 }
 
 type SQLStore struct {
@@ -47,7 +48,12 @@ type FollowTxParams struct {
 	TargetUserID int64 // The user being followed
 }
 
-// increments the following and follower for both users
+type UnFollowTxParams struct {
+	UserID       int64 // The user initiating the Unfollow
+	TargetUserID int64 // The user being  unfollow
+	// increments the following and follower for both users
+}
+
 func (store *SQLStore) Follow(ctx context.Context, args FollowTxParams) error {
 	return store.execTx(ctx, func(q *Queries) error {
 		if err := q.IncrementFollowingCount(ctx, args.UserID); err != nil {
@@ -58,6 +64,24 @@ func (store *SQLStore) Follow(ctx context.Context, args FollowTxParams) error {
 		}
 
 		_, err := q.FollowUser(ctx, FollowUserParams{
+			FollowerID:  args.UserID,
+			FollowingID: args.TargetUserID,
+		})
+
+		return err
+	})
+}
+
+func (store *SQLStore) UnFollow(ctx context.Context, args UnFollowTxParams) error {
+	return store.execTx(ctx, func(q *Queries) error {
+		if err := q.DecreaseFollowingCount(ctx, args.UserID); err != nil {
+			return err
+		}
+		if err := q.DecreaseFollowerCount(ctx, args.TargetUserID); err != nil {
+			return err
+		}
+
+		err := q.UnFollowUser(ctx, UnFollowUserParams{
 			FollowerID:  args.UserID,
 			FollowingID: args.TargetUserID,
 		})

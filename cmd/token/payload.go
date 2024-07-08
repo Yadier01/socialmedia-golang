@@ -38,7 +38,7 @@ func NewPayload(userID int64) (*Payload, error) {
 		ID:     tokenID,
 		UserID: userID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 100)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24 * 10)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},
 	}

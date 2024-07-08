@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -19,7 +21,7 @@ func (server *Server) GetUserById(c *gin.Context) {
 		return
 	}
 
-	usr, err := server.store.GetUser(context.Background(), id)
+	usr, err := server.store.GetUser(c, id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"msg": "No user"})
 		return
@@ -28,7 +30,7 @@ func (server *Server) GetUserById(c *gin.Context) {
 }
 
 func (server *Server) GetUsers(c *gin.Context) {
-	post, err := server.store.ListUsers(context.Background())
+	post, err := server.store.ListUsers(c)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
@@ -37,6 +39,7 @@ func (server *Server) GetUsers(c *gin.Context) {
 	c.JSON(http.StatusCreated, post)
 }
 
+// this creates a db transaction
 func (server *Server) FollowUser(c *gin.Context) {
 	var follow *db.Follower
 	err := c.ShouldBindJSON(&follow)
@@ -61,22 +64,29 @@ func (server *Server) FollowUser(c *gin.Context) {
 
 }
 
-func (server *Server) AddUser(c *gin.Context) {
-	var u *db.User
-	err := c.ShouldBindJSON(&u)
+func (server *Server) CreateUser(c *gin.Context) {
+	var req *db.User
+	err := c.ShouldBindJSON(&req)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
-	args := db.CreateUserParams{
-		Username: u.Username,
-		Password: u.Password,
-		Email:    u.Email,
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 16)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
 	}
+
+	args := db.CreateUserParams{
+		Username: req.Username,
+		Password: string(hashedPassword),
+		Email:    req.Email,
+	}
+
 	usr, err := server.store.CreateUser(context.Background(), args)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
-		fmt.Print(err)
 		return
 	}
 
@@ -91,27 +101,48 @@ func (server *Server) AddUser(c *gin.Context) {
 
 }
 
+type LoginRequest struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 func (server *Server) UserLogIn(c *gin.Context) {
-	var u *db.User
-	err := c.ShouldBindJSON(&u)
+	var req LoginRequest
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-	usr, err := server.store.LogIn(context.Background(), db.LogInParams{Username: u.Username, Password: u.Password})
-	if err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusInternalServerError, err)
 		return
 	}
 
-	jwt, err := server.TokenMaker.CreateToken(usr.ID)
+	user, err := server.store.LogIn(c, req.Username)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		fmt.Print(err)
+		c.JSON(http.StatusUnauthorized, err)
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"usr": usr, "token": jwt})
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Wrong credentials"})
+		return
+	}
 
+	jwt, err := server.TokenMaker.CreateToken(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"usr": req.Username, "token": jwt})
+}
+
+func (server *Server) DeleteUser(c *gin.Context) {
+	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	err := server.store.DeleteUser(c, authPayload.UserID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

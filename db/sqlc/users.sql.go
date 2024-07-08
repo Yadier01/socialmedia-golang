@@ -14,7 +14,7 @@ INSERT INTO users (
   username, password, email 
 ) VALUES (
   $1, $2, $3 
-) RETURNING id, username, password, email, follower_count, following_count
+) RETURNING id, username, password, following_count, follower_count, email, created_at
 `
 
 type CreateUserParams struct {
@@ -30,11 +30,34 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.Email,
-		&i.FollowerCount,
 		&i.FollowingCount,
+		&i.FollowerCount,
+		&i.Email,
+		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const decreaseFollowerCount = `-- name: DecreaseFollowerCount :exec
+UPDATE users
+SET follower_count = follower_count - 1
+WHERE id = $1
+`
+
+func (q *Queries) DecreaseFollowerCount(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, decreaseFollowerCount, id)
+	return err
+}
+
+const decreaseFollowingCount = `-- name: DecreaseFollowingCount :exec
+UPDATE users
+SET following_count = following_count - 1
+WHERE id = $1
+`
+
+func (q *Queries) DecreaseFollowingCount(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, decreaseFollowingCount, id)
+	return err
 }
 
 const deleteUser = `-- name: DeleteUser :exec
@@ -48,7 +71,7 @@ func (q *Queries) DeleteUser(ctx context.Context, id int64) error {
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, username, password, email, follower_count, following_count FROM users
+SELECT id, username, password, following_count, follower_count, email, created_at FROM users
 WHERE id = $1 LIMIT 1
 `
 
@@ -59,9 +82,10 @@ func (q *Queries) GetUser(ctx context.Context, id int64) (User, error) {
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.Email,
-		&i.FollowerCount,
 		&i.FollowingCount,
+		&i.FollowerCount,
+		&i.Email,
+		&i.CreatedAt,
 	)
 	return i, err
 }
@@ -89,7 +113,7 @@ func (q *Queries) IncrementFollowingCount(ctx context.Context, id int64) error {
 }
 
 const listUsers = `-- name: ListUsers :many
-SELECT id, username, password, email, follower_count, following_count FROM users
+SELECT id, username, password, following_count, follower_count, email, created_at FROM users
 ORDER BY username
 `
 
@@ -106,9 +130,10 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 			&i.ID,
 			&i.Username,
 			&i.Password,
-			&i.Email,
-			&i.FollowerCount,
 			&i.FollowingCount,
+			&i.FollowerCount,
+			&i.Email,
+			&i.CreatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -124,25 +149,57 @@ func (q *Queries) ListUsers(ctx context.Context) ([]User, error) {
 }
 
 const logIn = `-- name: LogIn :one
-SELECT id, username, password, email, follower_count, following_count FROM users 
-WHERE username  = $1 AND password = $2 LIMIT 1
+SELECT id, username, password, following_count, follower_count, email, created_at FROM users 
+WHERE username = $1
 `
 
-type LogInParams struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func (q *Queries) LogIn(ctx context.Context, arg LogInParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, logIn, arg.Username, arg.Password)
+func (q *Queries) LogIn(ctx context.Context, username string) (User, error) {
+	row := q.db.QueryRowContext(ctx, logIn, username)
 	var i User
 	err := row.Scan(
 		&i.ID,
 		&i.Username,
 		&i.Password,
-		&i.Email,
-		&i.FollowerCount,
 		&i.FollowingCount,
+		&i.FollowerCount,
+		&i.Email,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateUser = `-- name: UpdateUser :one
+UPDATE users
+SET username = COALESCE($1, username),
+    password = COALESCE($2, password),
+    email = COALESCE($3, email)
+WHERE id = $4
+RETURNING id, username, password, following_count, follower_count, email, created_at
+`
+
+type UpdateUserParams struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Email    string `json:"email"`
+	ID       int64  `json:"id"`
+}
+
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
+		arg.Username,
+		arg.Password,
+		arg.Email,
+		arg.ID,
+	)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Username,
+		&i.Password,
+		&i.FollowingCount,
+		&i.FollowerCount,
+		&i.Email,
+		&i.CreatedAt,
 	)
 	return i, err
 }

@@ -23,6 +23,7 @@ func (server *Server) GetPostById(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"msg": "No user"})
 		return
 	}
+
 	c.JSON(http.StatusOK, usr)
 }
 
@@ -34,12 +35,11 @@ func (server *Server) CreatePost(c *gin.Context) {
 		return
 	}
 	authPayload := c.MustGet(authorizationPayloadKey).(*token.Payload)
-
 	args := db.CreatePostParams{
-		UserID: int32(authPayload.UserID),
-		Title:  post.Title,
+		UserID: authPayload.UserID,
 		Body:   post.Body,
 	}
+
 	usr, err := server.store.CreatePost(context.Background(), args)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err)
@@ -49,12 +49,12 @@ func (server *Server) CreatePost(c *gin.Context) {
 	c.JSON(http.StatusCreated, usr)
 }
 
-func (server *Server) GetPosts(c *gin.Context) {
-	post, err := server.store.ListPosts(context.Background())
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
+// func (server *Server) GetPosts(c *gin.Context) {
+// 	post, err := server.store.ListPosts(context.Background(), )
+// 	if err != nil {
+// 		c.JSON(http.StatusInternalServerError, err)
+// 		return
+// 	}
 
-	c.JSON(http.StatusCreated, post)
-}
+// 	c.JSON(http.StatusCreated, post)
+// }
