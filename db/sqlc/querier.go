@@ -26,6 +26,7 @@ type Querier interface {
 	LogIn(ctx context.Context, username string) (User, error)
 	UnFollowUser(ctx context.Context, arg UnFollowUserParams) error
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
+	createComment(ctx context.Context, arg createCommentParams) (Comment, error)
 }
 
 var _ Querier = (*Queries)(nil)

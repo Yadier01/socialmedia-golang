@@ -13,7 +13,7 @@ type Comment struct {
 	PostID          int64         `json:"post_id"`
 	UserID          int64         `json:"user_id"`
 	Content         string        `json:"content"`
-	Likes           sql.NullInt64 `json:"likes"`
+	Likes           int64         `json:"likes"`
 	CreatedAt       sql.NullTime  `json:"created_at"`
 	ParentCommentID sql.NullInt64 `json:"parent_comment_id"`
 	Depth           sql.NullInt32 `json:"depth"`
