@@ -6,19 +6,8 @@ package db
 
 import (
 	"database/sql"
+	"time"
 )
-
-type Comment struct {
-	ID              int64         `json:"id"`
-	PostID          int64         `json:"post_id"`
-	UserID          int64         `json:"user_id"`
-	Content         string        `json:"content"`
-	Likes           int64         `json:"likes"`
-	CreatedAt       sql.NullTime  `json:"created_at"`
-	ParentCommentID sql.NullInt64 `json:"parent_comment_id"`
-	Depth           sql.NullInt32 `json:"depth"`
-	UpdatedAt       sql.NullTime  `json:"updated_at"`
-}
 
 type Follower struct {
 	ID          int64        `json:"id"`
@@ -36,10 +25,13 @@ type Like struct {
 }
 
 type Post struct {
-	ID        int64        `json:"id"`
-	UserID    int64        `json:"user_id"`
-	Body      string       `json:"body"`
-	CreatedAt sql.NullTime `json:"created_at"`
+	ID           int64         `json:"id"`
+	UserID       int64         `json:"user_id"`
+	Body         string        `json:"body"`
+	Likes        int64         `json:"likes"`
+	Comments     int64         `json:"comments"`
+	ParentPostID sql.NullInt64 `json:"parent_post_id"`
+	CreatedAt    time.Time     `json:"created_at"`
 }
 
 type Profile struct {
