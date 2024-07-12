@@ -37,12 +37,12 @@ func (server *Server) setupRouter() {
 
 	r.POST("/login", server.UserLogIn)
 	r.GET("/:id", server.GetUserById)
+	r.GET("/posts", server.GetPosts)
 	r.GET("/", server.GetUsers)
 	r.POST("/", server.CreateUser)
 	authRoutes := r.Group("/").Use(authMiddleware(server.TokenMaker))
 
-	r.GET("/post/:id", server.GetPostById)
-	// r.GET("/post/", server.GetPosts)
+	// r.GET("/post/:id", server.GetPostById)
 	authRoutes.POST("/post/", server.CreatePost)
 	authRoutes.POST("/follow/", server.FollowUser)
 	authRoutes.DELETE("/user/", server.DeleteUser)

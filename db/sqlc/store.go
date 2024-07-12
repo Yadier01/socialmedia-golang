@@ -89,3 +89,22 @@ func (store *SQLStore) UnFollow(ctx context.Context, args UnFollowTxParams) erro
 		return err
 	})
 }
+
+// func (store *SQLStore) Comment(ctx context.Context, args FollowTxParams) error {
+// 	return store.execTx(ctx, func(q *Queries) error {
+// 		if err := q.CreatePost(ctx, args.UserID); err != nil {
+// 			return err
+// 		}
+// 		if err := q.IncrementFollowerCount(ctx, args.TargetUserID); err != nil {
+// 			return err
+// 		}
+//
+// 		_, err := q.FollowUser(ctx, FollowUserParams{
+// 			FollowerID:  args.UserID,
+// 			FollowingID: args.TargetUserID,
+// 		})
+//
+// 		return err
+// 	})
+// }
+//

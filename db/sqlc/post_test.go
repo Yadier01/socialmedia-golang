@@ -10,7 +10,6 @@ import (
 )
 
 func createPostUtil(t *testing.T) (Post, User) {
-
 	u := createRandomAccount(t)
 
 	args := CreatePostParams{
@@ -23,6 +22,27 @@ func createPostUtil(t *testing.T) (Post, User) {
 	require.NotEmpty(t, post)
 	return post, u
 }
+
+func TestCreatePostComment(t *testing.T) {
+	pst, user := createPostUtil(t)
+
+	args := CreatePostParams{
+		UserID: user.ID,
+		Body:   util.RandomString(50),
+		ParentPostID: sql.NullInt64{
+			Int64: pst.ID,
+			Valid: true,
+		},
+	}
+
+	post, err := testQueries.CreatePost(context.Background(), args)
+	require.NoError(t, err)
+	require.NotEmpty(t, post)
+
+	require.Equal(t, pst.ID, post.ParentPostID.Int64)
+
+}
+
 func TestCreatePost(t *testing.T) {
 	createPostUtil(t)
 }
