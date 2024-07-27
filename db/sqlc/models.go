@@ -20,7 +20,6 @@ type Like struct {
 	ID        int64         `json:"id"`
 	UserID    int64         `json:"user_id"`
 	PostID    sql.NullInt64 `json:"post_id"`
-	CommentID sql.NullInt64 `json:"comment_id"`
 	CreatedAt sql.NullTime  `json:"created_at"`
 }
 

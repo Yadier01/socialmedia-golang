@@ -6,9 +6,11 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 type Querier interface {
+	AddLike(ctx context.Context, arg AddLikeParams) error
 	CreatePost(ctx context.Context, arg CreatePostParams) (Post, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (User, error)
 	DecreaseFollowerCount(ctx context.Context, id int64) error
@@ -17,14 +19,17 @@ type Querier interface {
 	DeleteUser(ctx context.Context, id int64) error
 	EditPost(ctx context.Context, arg EditPostParams) (Post, error)
 	FollowUser(ctx context.Context, arg FollowUserParams) (Follower, error)
-	GetPost(ctx context.Context, id int64) (Post, error)
+	GetLike(ctx context.Context, arg GetLikeParams) (Like, error)
+	GetPost(ctx context.Context, id int64) ([]GetPostRow, error)
 	GetUser(ctx context.Context, id int64) (User, error)
 	IncrementFollowerCount(ctx context.Context, id int64) error
 	IncrementFollowingCount(ctx context.Context, id int64) error
-	ListPosts(ctx context.Context, arg ListPostsParams) ([]Post, error)
+	ListPosts(ctx context.Context, arg ListPostsParams) ([]ListPostsRow, error)
 	ListUsers(ctx context.Context) ([]User, error)
 	LogIn(ctx context.Context, username string) (User, error)
+	UnAddLike(ctx context.Context, arg UnAddLikeParams) error
 	UnFollowUser(ctx context.Context, arg UnFollowUserParams) error
+	UpdateLikesCount(ctx context.Context, postID sql.NullInt64) error
 	UpdatePost(ctx context.Context, arg UpdatePostParams) (Post, error)
 	UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error)
 }

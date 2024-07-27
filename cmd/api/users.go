@@ -15,6 +15,7 @@ import (
 
 func (server *Server) GetUserById(c *gin.Context) {
 	idString := c.Param("id")
+
 	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "error"})

@@ -49,15 +49,16 @@ CREATE TABLE IF NOT EXISTS likes (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT NOT NULL,
   post_id BIGINT,
-  comment_id BIGINT,
   created_at TIMESTAMP(0)
   WITH
     TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (user_id, post_id),
-    UNIQUE (user_id, comment_id),
     FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
     FOREIGN KEY (post_id) REFERENCES posts (id) ON DELETE CASCADE
 );
 
 CREATE INDEX likes_user_post_idx ON likes (user_id, post_id);
 
+CREATE INDEX idx_posts_id ON posts (id);
+CREATE INDEX idx_posts_parent_post_id ON posts (parent_post_id);
+CREATE INDEX idx_posts_created_at ON posts (created_at);

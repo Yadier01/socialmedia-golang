@@ -1,13 +1,29 @@
--- name: GetPost :one
-SELECT * FROM posts
-WHERE id = $1
-LIMIT 1;
+-- name: GetPost :many
+WITH RECURSIVE PostWithComments AS (
+  SELECT p.*, u.username
+  FROM posts p
+  JOIN users u ON p.user_id = u.id
+  WHERE p.id = $1
+
+  UNION ALL
+
+  SELECT p2.*, u2.username
+  FROM posts p2
+  JOIN PostWithComments pwc ON p2.parent_post_id = pwc.id
+  JOIN users u2 ON p2.user_id = u2.id
+)
+SELECT *
+FROM PostWithComments
+ORDER BY created_at;
 
 -- name: ListPosts :many
-select * from posts
-order by id
-limit $1
-offset $2;
+SELECT p.* , u.username 
+FROM posts p
+JOIN users u ON p.user_id = u.id
+WHERE p.parent_post_id IS NULL  -- Only select top-level posts
+ORDER BY p.id
+LIMIT $1
+OFFSET $2;
 
 -- name: EditPost :one
 UPDATE posts
